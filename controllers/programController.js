@@ -2,12 +2,19 @@ import Program from "../models/Program.js";
 import User from "../models/User.js";
 
 // POST /api/programs  (coach only)
-// body: { clientId, weekLabel, exercises: [{lift, sets, note}], notes }
+// body: { clientId, weekLabel, rows: [{day, lift, sets, reps, weight, rpe, notes}], notes }
 export async function assignProgram(req, res) {
-  const { clientId, weekLabel, exercises, notes } = req.body;
+  const { clientId, weekLabel, rows, notes } = req.body;
 
-  if (!clientId || !weekLabel || !Array.isArray(exercises) || exercises.length === 0) {
-    return res.status(400).json({ message: "clientId, weekLabel, and at least one exercise are required." });
+  if (!clientId || !weekLabel || !Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ message: "clientId, weekLabel, and at least one row are required." });
+  }
+
+  // Drop any fully-blank rows the coach left in the grid — only rows with an
+  // exercise name filled in count as real program entries.
+  const validRows = rows.filter((r) => r.lift && r.lift.trim());
+  if (validRows.length === 0) {
+    return res.status(400).json({ message: "Every row needs at least an exercise name filled in." });
   }
 
   const client = await User.findById(clientId);
@@ -19,7 +26,7 @@ export async function assignProgram(req, res) {
     client: clientId,
     coach: req.user._id,
     weekLabel,
-    exercises,
+    rows: validRows,
     notes: notes || "",
   });
 
