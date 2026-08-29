@@ -9,14 +9,16 @@ const plans = [
     name: "Starter",
     price: 1999,
     period: "month",
+    durationMonths: 1,
     description: "For lifters building the base.",
     features: ["Monthly program", "Form check (2 videos/wk)", "Chat — 48hr response", "Access to training log"],
   },
   {
     key: "COMPETITOR",
     name: "Competitor",
-    price: 3499,
-    period: "month",
+    price: 4999,
+    period: "3 months",
+    durationMonths: 3,
     description: "For lifters chasing a total.",
     features: [
       "Weekly program adjustments",
@@ -29,8 +31,9 @@ const plans = [
   {
     key: "ELITE",
     name: "Elite",
-    price: 5999,
-    period: "month",
+    price: 9999,
+    period: "6 months",
+    durationMonths: 6,
     description: "For lifters going to nationals.",
     features: [
       "Daily program adjustments",
@@ -56,7 +59,7 @@ async function seed() {
     await User.create({
       name: "Coach",
       email: coachEmail,
-      password: "paggu1234", // change after first login — this is a seed default for local dev only
+      password: "paggu1234",
       role: "coach",
     });
     console.log(`Seeded demo coach account: ${coachEmail} / paggu1234`);

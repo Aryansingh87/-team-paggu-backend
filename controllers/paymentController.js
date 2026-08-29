@@ -4,9 +4,13 @@ import Payment from "../models/Payment.js";
 import MembershipPlan from "../models/MembershipPlan.js";
 import User from "../models/User.js";
 
-// POST /api/payments/create-order  (logged-in user)
-// body: { plan: "STARTER" | "COMPETITOR" | "ELITE" }
 export async function createOrder(req, res) {
+  if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID.includes("your_")) {
+    return res.status(500).json({
+      message: "Razorpay test keys aren't set up yet. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your .env file — see the backend README for how to get test keys.",
+    });
+  }
+
   const { plan } = req.body;
   const planDoc = await MembershipPlan.findOne({ key: plan });
 
@@ -30,12 +34,9 @@ export async function createOrder(req, res) {
     status: "created",
   });
 
-  // key_id is safe to expose to the frontend — it's needed to open the Razorpay checkout widget
   res.json({ order, keyId: process.env.RAZORPAY_KEY_ID });
 }
 
-// POST /api/payments/verify  (logged-in user, called from the Razorpay checkout success handler)
-// body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
 export async function verifyPayment(req, res) {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
@@ -62,9 +63,12 @@ export async function verifyPayment(req, res) {
   payment.razorpaySignature = razorpay_signature;
   await payment.save();
 
-  // Activate the user's membership
+  // Look up the actual plan to get its real duration, instead of assuming 1 month
+  const planDoc = await MembershipPlan.findOne({ key: payment.plan });
+  const durationMonths = planDoc?.durationMonths || 1;
+
   const expiryDate = new Date();
-  expiryDate.setMonth(expiryDate.getMonth() + 1);
+  expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
 
   await User.findByIdAndUpdate(payment.user, {
     membership: {
