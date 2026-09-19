@@ -1,7 +1,7 @@
 import express from "express";
 import { generateProgramDraft, askCoachBot } from "../controllers/aiController.js";
-import { protect, authorize } from "./middleware/auth.js";
-import asyncHandler from "./utils/asyncHandler.js";
+import { protect, authorize } from "../middleware/auth.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const router = express.Router();
 
