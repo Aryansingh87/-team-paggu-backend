@@ -1,8 +1,7 @@
-import ai from "./config/gemini.js";
-import { embedText } from "./config/voyage.js";
-import { cosineSimilarity } from "./utils/cosineSimilarity.js";
-import KnowledgeChunk from "./models/KnowledgeChunk.js";
-
+import ai from "../config/gemini.js";
+import { embedText } from "../config/voyage.js";
+import { cosineSimilarity } from "../utils/cosineSimilarity.js";
+import KnowledgeChunk from "../models/KnowledgeChunk.js";
 const MODEL = "gemini-2.5-flash";
 
 // Schema Gemini must follow — matches the Program model's `rows` shape
