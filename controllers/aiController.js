@@ -2,6 +2,7 @@ import ai from "../config/gemini.js";
 import { embedText } from "../config/voyage.js";
 import { cosineSimilarity } from "../utils/cosineSimilarity.js";
 import KnowledgeChunk from "../models/KnowledgeChunk.js";
+
 const MODEL = "gemini-flash-latest";
 
 // Schema Gemini must follow — matches the Program model's `rows` shape
@@ -29,6 +30,28 @@ const programSchema = {
   required: ["rows"],
 };
 
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Gemini occasionally returns a transient 503 "high demand" error — retry
+// a couple of times with a short pause before giving up, since these
+// almost always clear up within seconds.
+async function generateWithRetry(params, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (err) {
+      const isRetryable = err.message?.includes("UNAVAILABLE") || err.message?.includes("503");
+      if (isRetryable && attempt < retries) {
+        await sleep(3000);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 // POST /api/ai/generate-program  (coach only)
 // body: { goal, experienceLevel, currentMaxes, daysPerWeek }
 export async function generateProgramDraft(req, res) {
@@ -52,7 +75,7 @@ Use "day" values like "Day 1", "Day 2", etc. Use realistic sets/reps/weight
 (weight can be a %1RM like "75%" or an RPE-based note if maxes aren't given).
 Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
 
-  const response = await ai.models.generateContent({
+  const response = await generateWithRetry({
     model: MODEL,
     contents: prompt,
     config: {
@@ -95,7 +118,7 @@ export async function askCoachBot(req, res) {
   // 3. Generate an answer grounded in that retrieved context
   const prompt = `Context from the coaching knowledge base:\n\n${context}\n\nQuestion: ${question}`;
 
-  const response = await ai.models.generateContent({
+  const response = await generateWithRetry({
     model: MODEL,
     contents: prompt,
     config: {
