@@ -2,7 +2,7 @@ import ai from "../config/gemini.js";
 import { embedText } from "../config/voyage.js";
 import { cosineSimilarity } from "../utils/cosineSimilarity.js";
 import KnowledgeChunk from "../models/KnowledgeChunk.js";
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-flash-latest";
 
 // Schema Gemini must follow — matches the Program model's `rows` shape
 // exactly, so the output can be dropped straight into the coach's grid.
