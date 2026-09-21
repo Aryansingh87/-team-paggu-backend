@@ -74,19 +74,38 @@ Use "day" values like "Day 1", "Day 2", etc. Use realistic sets/reps/weight
 (weight can be a %1RM like "75%" or an RPE-based note if maxes aren't given).
 Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
 
-  const response = await generateWithRetry({
-    model: MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: programSchema,
-    },
-  });
+  let data;
+  let attempt = 0;
+  const maxAttempts = 3;
 
-  const data = JSON.parse(response.text);
+  while (attempt < maxAttempts) {
+    const response = await generateWithRetry({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: programSchema,
+      },
+    });
+
+    const parsed = JSON.parse(response.text);
+    const looksValid = parsed.rows?.every(
+      (row) => row.lift && row.lift.length < 80 && (!row.weight || row.weight.length < 40)
+    );
+
+    if (looksValid) {
+      data = parsed;
+      break;
+    }
+    attempt++;
+  }
+
+  if (!data) {
+    return res.status(502).json({ message: "AI returned malformed output after multiple attempts. Please try again." });
+  }
+
   res.json({ rows: data.rows });
 }
-
 // POST /api/ai/ask  (any logged-in user)
 // body: { question }
 export async function askCoachBot(req, res) {
