@@ -78,6 +78,14 @@ Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
   let attempt = 0;
   const maxAttempts = 3;
 
+   // Only allow standard keyboard characters — catches garbled/foreign-script
+  // glitches the AI occasionally produces, not just excessive length.
+  const isCleanText = (str) => !str || /^[\x20-\x7E]*$/.test(str);
+
+  let data;
+  let attempt = 0;
+  const maxAttempts = 3;
+
   while (attempt < maxAttempts) {
     const response = await generateWithRetry({
       model: MODEL,
@@ -89,9 +97,10 @@ Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
     });
 
     const parsed = JSON.parse(response.text);
-    const looksValid = parsed.rows?.every(
-      (row) => row.lift && row.lift.length < 80 && (!row.weight || row.weight.length < 40)
-    );
+    const looksValid = parsed.rows?.every((row) => {
+      const fields = [row.day, row.lift, row.sets, row.reps, row.weight, row.rpe, row.notes];
+      return row.lift && row.lift.length < 80 && fields.every((f) => isCleanText(f) && (!f || f.length < 80));
+    });
 
     if (looksValid) {
       data = parsed;
@@ -99,6 +108,13 @@ Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
     }
     attempt++;
   }
+
+  if (!data) {
+    return res.status(502).json({ message: "AI returned malformed output after multiple attempts. Please try again." });
+  }
+
+  res.json({ rows: data.rows });
+}
 
   if (!data) {
     return res.status(502).json({ message: "AI returned malformed output after multiple attempts. Please try again." });
