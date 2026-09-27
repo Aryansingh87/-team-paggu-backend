@@ -82,9 +82,9 @@ Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
   // glitches the AI occasionally produces, not just excessive length.
   const isCleanText = (str) => !str || /^[\x20-\x7E]*$/.test(str);
 
-  let data;
-  let attempt = 0;
-  const maxAttempts = 3;
+  // let data;
+  // let attempt = 0;
+  // const maxAttempts = 3;
 
   while (attempt < maxAttempts) {
     const response = await generateWithRetry({
@@ -121,7 +121,7 @@ Keep notes short and coaching-specific (form cues, tempo, etc), not generic.`;
   }
 
   res.json({ rows: data.rows });
-}
+
 // POST /api/ai/ask  (any logged-in user)
 // body: { question }
 export async function askCoachBot(req, res) {

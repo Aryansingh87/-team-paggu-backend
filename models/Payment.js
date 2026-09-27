@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const paymentSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    plan: { type: String, enum: ["STARTER", "COMPETITOR", "ELITE"], required: true },
+    plan: { type: String, required: true }, // matches MembershipPlan.key — no longer restricted to a fixed list
     amount: { type: Number, required: true }, // in paise (smallest INR unit)
     razorpayOrderId: { type: String, required: true },
     razorpayPaymentId: { type: String, default: null },

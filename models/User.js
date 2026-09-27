@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     // Membership snapshot — kept on the user for fast dashboard reads.
     // Source of truth for payment history lives in the Payment model.
     membership: {
-      plan: { type: String, enum: ["STARTER", "COMPETITOR", "ELITE", null], default: null },
+      plan: { type: String, default: null }, // matches MembershipPlan.key — no longer restricted to a fixed list
       status: { type: String, enum: ["active", "inactive", "expired"], default: "inactive" },
       startDate: { type: Date, default: null },
       expiryDate: { type: Date, default: null },
